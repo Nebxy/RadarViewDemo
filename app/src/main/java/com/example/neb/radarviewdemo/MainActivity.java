@@ -10,8 +10,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
     EditText editQuery;
     @BindView(R.id.bt_search)
     Button btSearch;
+    private FrameLayout poiContent;
     private ArrayList<TextView> tvList = new ArrayList<>(); //存放悬浮View的集合
 
     private RelativeLayout activity_main;
@@ -48,8 +51,8 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
     private AMap aMap;
     private SensorManager sensorManager;
     private Sensor magneticSensor;//传感器
-    //private LatLng centerpoint = new LatLng(30.287459, 120.153576);// 杭州市经纬度
-    private LatLng centerpoint = new LatLng(30.203588, 120.216596);// 温馨人家
+    //private LatLng centerpoint = new LatLng(30.203588, 120.216596);// 温馨人家
+    private LatLng centerpoint = new LatLng(30.230867, 120.189743);// 单位
     private LinearLayout.LayoutParams mParams;
     private Marker marker;
     private PoiSearch.Query query;
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
     private LatLonPoint lp;
     private ArrayList<PoiItem> pois;
     //private LatLonPoint latLonPoint = new LatLonPoint(30.287459, 120.153576);
-    private LatLonPoint latLonPoint = new LatLonPoint(30.203588, 120.216596);
+    private LatLonPoint latLonPoint = new LatLonPoint(30.230867, 120.189743);
     private LatLonPoint latLonPoint1;
     private RadarView radarView;
     private float x;
@@ -66,6 +69,11 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
     private float tempx;
     private TextView tempText;
     private ArrayList<Integer> angle = new ArrayList<>();
+    private float z;
+    private float fixedZ;
+    private float fixedX;
+    private int width;
+    private int height;
     //private LatLonPoint latLonPoint = new LatLonPoint(31.238068, 121.501654);
 
 
@@ -74,7 +82,11 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        //设置初始坐标
+        //得到屏幕宽高
+        WindowManager wm = this.getWindowManager();
+        width = wm.getDefaultDisplay().getWidth();
+        height = wm.getDefaultDisplay().getHeight();
+        System.out.println(width + ":" + height);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         magneticSensor = sensorManager
                 .getDefaultSensor(Sensor.TYPE_ORIENTATION);
@@ -87,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
         mapView.onCreate(savedInstanceState);
         init();
         showMarker(centerpoint);
-        //doSearchQuery("网咖");
+        doSearchQuery("超市");
     }
 
     /**
@@ -110,6 +122,9 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
      */
     private void init() {
         activity_main = (RelativeLayout) findViewById(R.id.activity_main);
+        poiContent = (FrameLayout) findViewById(R.id.poiContent);
+        //将poicontent右移400像素以校准
+        //poiContent.setTranslationX(700);
         radarView = (RadarView) findViewById(R.id.radarView);
         editQuery = (EditText) findViewById(R.id.editQuery);
         if (aMap == null) {
@@ -117,19 +132,18 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
             aMap.setMapType(AMap.MAP_TYPE_NORMAL);// 矢量地图模式
             mParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.MATCH_PARENT);
-            activity_main.addView(mapView, mParams);
+            //activity_main.addView(mapView, mParams);
         }
     }
 
 
     /**
-     *      * 开始进行poi搜索
-     *      
+     * * 开始进行poi搜索
      */
     protected void doSearchQuery(String keyWord) {
         //aMap.clear();
         for (TextView textView : tvList) {
-            activity_main.removeView(textView);
+            poiContent.removeView(textView);
         }
         tvList.clear();
         angle.clear();
@@ -166,13 +180,13 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
             System.out.println("角度：==" + RadarView.getAngle(A, B));
             angle.add((int) RadarView.getAngle(A, B));
             radarView.addPoint(poi, latLonPoint);
-            //radarView.addPoint();
             //System.out.println("poi坐标：" + poi.getLatLonPoint().getLongitude() + ":" + poi.getLatLonPoint().getLatitude() + "====");
             System.out.println("==============================================================================");
             //初始化悬浮view位置 8640为屏幕像素的八倍
-            int left = (int) ((((float) (360 - RadarView.getAngle(A, B)) / (float) 360)) * -8640 + 4320);
+            //根据view
+            int left = (int) ((((float) (360 - RadarView.getAngle(A, B)) / (float) 360)) * -width * 8);
             System.out.println("?????????" + left);
-            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT); //由于设置悬浮view的初始位置
             params.setMargins(left, 0, 50, 50);
             TextView tempText = new TextView(this);
@@ -185,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
                 }
             });
             tvList.add(tempText);
-            activity_main.addView(tempText);
+            poiContent.addView(tempText);
         }
 
         RadarView.MyLatLng A = new RadarView.MyLatLng(latLonPoint.getLongitude(), latLonPoint.getLatitude());
@@ -248,11 +262,13 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        x = event.values[0];
+        z = event.values[2];
         y = event.values[1];
+        x = event.values[0] + z;
         //修正y
-        fixedY = Math.abs(y / 90) * 1920 - 960;
-        //修正x， 假设view处于相对正北180度位置
+        fixedY = Math.abs(y / 90) * height - height / 2;
+        //修正Z
+        fixedZ = (180 - (z + 90)) + 270;
 
         //改变所有悬浮view的位置
         if (tvList.size() > 0) {
@@ -263,9 +279,14 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
                 } else {
                     tempx = x;
                 }
-                float fixedX = (tempx / (360 - 22.5f)) * 1080 - 540;
-                tvList.get(i).setTranslationX((1080 - fixedX * 8) + 4320);
+                //float fixedX = (tempx / (360 - 22.5f)) * 1080 - 540;
+                //tvList.get(i).setTranslationX((1080 - fixedX * 8) + 4320);
+                fixedX = (width - ((tempx / (360 - 22.5f)) * width - width / 2) * 8) + width * 8;
+                float fixedXX = (((90f - (Math.abs(z))) / 90f)) * fixedX;
+                tvList.get(i).setTranslationX(fixedX);
                 tvList.get(i).setTranslationY(fixedY);
+                tvList.get(i).setRotation(fixedZ);
+                poiContent.setRotation(360 - fixedZ);
             }
         }
     }
