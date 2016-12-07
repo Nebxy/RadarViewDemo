@@ -7,12 +7,23 @@
     android:layout_height="match_parent"
     tools:context="com.example.neb.radarviewdemo.MainActivity">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="-1000px"
+        android:text="aaaaaa" />
+
     <FrameLayout
         android:id="@+id/poiContent"
-        android:elevation="15dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:elevation="15dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="-1000px"
+            android:text="aaaaaa" />
     </FrameLayout>
 
     <!-- <com.amap.api.maps2d.MapView

@@ -11,6 +11,8 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -32,6 +34,7 @@ import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.poisearch.PoiResult;
 import com.amap.api.services.poisearch.PoiSearch;
+import com.example.neb.radarviewdemo.view.FloatView;
 import com.example.neb.radarviewdemo.view.RadarView;
 
 import java.util.ArrayList;
@@ -44,8 +47,7 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
     @BindView(R.id.bt_search)
     Button btSearch;
     private FrameLayout poiContent;
-    private ArrayList<TextView> tvList = new ArrayList<>(); //存放悬浮View的集合
-
+    private ArrayList<FloatView> tvList = new ArrayList<>(); //存放悬浮View的集合
     private RelativeLayout activity_main;
     private MapView mapView;
     private AMap aMap;
@@ -124,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
         activity_main = (RelativeLayout) findViewById(R.id.activity_main);
         poiContent = (FrameLayout) findViewById(R.id.poiContent);
         //将poicontent右移400像素以校准
-        //poiContent.setTranslationX(700);
+        //poiContent.setTranslationX(8640);
         radarView = (RadarView) findViewById(R.id.radarView);
         editQuery = (EditText) findViewById(R.id.editQuery);
         if (aMap == null) {
@@ -142,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
      */
     protected void doSearchQuery(String keyWord) {
         //aMap.clear();
-        for (TextView textView : tvList) {
+        for (LinearLayout textView : tvList) {
             poiContent.removeView(textView);
         }
         tvList.clear();
@@ -186,10 +188,18 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
             //根据view
             int left = (int) ((((float) (360 - RadarView.getAngle(A, B)) / (float) 360)) * -width * 8);
             System.out.println("?????????" + left);
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT); //由于设置悬浮view的初始位置
-            params.setMargins(left, 0, 50, 50);
-            TextView tempText = new TextView(this);
+            /*FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT); //设置悬浮view的初始位置*/
+            FloatView ll = new FloatView(this,left,0);
+            TextView tv = new TextView(this);
+            tv.setText("ssssss");
+
+
+            //ll.setLayoutParams(llparams);
+            //ll.addView(tv);
+            //填充店名和距离
+            ll.setName(poi.getTitle()).setDistance(poi.getDistance());
+/*            TextView tempText = new TextView(this);
             tempText.setText(poi.getTitle() + "\n" + poi.getDistance() + "米");
             tempText.setLayoutParams(params);
             tempText.setOnClickListener(new View.OnClickListener() {
@@ -197,9 +207,9 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
                 public void onClick(View v) {
                     Toast.makeText(MainActivity.this, poi.getTitle(), Toast.LENGTH_SHORT).show();
                 }
-            });
-            tvList.add(tempText);
-            poiContent.addView(tempText);
+            });*/
+            tvList.add(ll);
+            poiContent.addView(ll);
         }
 
         RadarView.MyLatLng A = new RadarView.MyLatLng(latLonPoint.getLongitude(), latLonPoint.getLatitude());
@@ -285,8 +295,8 @@ public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSe
                 float fixedXX = (((90f - (Math.abs(z))) / 90f)) * fixedX;
                 tvList.get(i).setTranslationX(fixedX);
                 tvList.get(i).setTranslationY(fixedY);
-                tvList.get(i).setRotation(fixedZ);
-                poiContent.setRotation(360 - fixedZ);
+                //tvList.get(i).setRotation(fixedZ);
+                //poiContent.setRotation(360 - fixedZ);
             }
         }
     }
